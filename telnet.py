@@ -1,3 +1,7 @@
+# Simple Python code that will telnet to the router defined in HOST
+# Username and Pwd will be prompted for 
+# Once connected the command show ip int brief will be run and output 
+
 import getpass
 import telnetlib
 
