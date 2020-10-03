@@ -9,7 +9,15 @@ def my_function(fname):
 # This is a function with an argument - the argument is called fname, you 
 # can add more arguments if you separate them with a comma
 
+"""
+This is a Docstring 
+"""
+
 my_function("Emil")
 my_function("Tobias")
 my_function("Linus")
+
+"""
+This is a Docstring 
+"""
 
