@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 
 # NetBox API URL and Token
 NETBOX_API_URL = "http://localhost:8000"  # Replace with your NetBox instance URL
-API_TOKEN = "3f8908181dcc5ede256e8610b8b374adcb43b457"  # Replace with your NetBox API token
+API_TOKEN = "3f8908181dcc5ede256e8610b8b374adcb43b457"  # Replace with your actual NetBox API token
 
 # Initialize pynetbox connection
 netbox = pynetbox.api(NETBOX_API_URL, token=API_TOKEN)
@@ -20,7 +20,7 @@ def get_all_parent_prefixes():
     # Fetch all prefixes from NetBox
     prefixes = netbox.ipam.prefixes.all()
 
-    # Filter out only the top-level parent prefixes (e.g., /16, /8) 
+    # Filter out only the top-level parent prefixes (e.g., /16, /8)
     parent_prefixes = []
     for prefix in prefixes:
         # Convert the prefix to an ipaddress.IPv4Network object
@@ -72,13 +72,13 @@ def get_usable_ips_from_subnet(subnet):
         console.print(f"The subnet [bold red]{subnet}[/bold red] is not a /31 subnet.", style="bold red")
         return []
 
-    # Get the usable IPs in the /31 range (only 2 usable IPs in a /31)
-    usable_ips = list(network.hosts())[:2]  # Only take the first 2 usable IPs
+    # Get the 2 usable IPs from the /31 subnet (both are usable)
+    usable_ips = list(network.hosts())  # All hosts in the /31 subnet are usable
     return usable_ips
 
 # Function to provision a new /31 subnet into NetBox with clarification
 def provision_new_subnet(parent_prefix, subnet, description):
-    # Create a new prefix (subnet) in NetBox using the first IP (network address) of the /31
+    # Create a new prefix (subnet) in NetBox using the network address of the /31
     data = {
         "prefix": str(subnet),
         "tenant": None,  # Adjust if you need to assign it to a tenant
@@ -86,22 +86,12 @@ def provision_new_subnet(parent_prefix, subnet, description):
     }
 
     # Make the API request to create the new prefix
-    netbox.ipam.prefixes.create(**data)
-    console.print(f"Successfully provisioned new /31 subnet: [bold magenta]{subnet}[/bold magenta] with description: [bold green]{description}[/bold green]", style="bold green")
-
-# Function to get the 2 usable IPs from the /31 subnet
-def get_usable_ips_from_subnet(subnet):
-    # Convert subnet to an ipaddress.IPv4Network object
-    network = ipaddress.IPv4Network(subnet)
-
-    # Ensure it's a /31 subnet
-    if network.prefixlen != 31:
-        console.print(f"The subnet [bold red]{subnet}[/bold red] is not a /31 subnet.", style="bold red")
-        return []
-
-    # Get the 2 usable IPs from the /31 subnet (both are usable)
-    usable_ips = list(network.hosts())[:2]  # Only take the first 2 usable IPs
-    return usable_ips
+    try:
+        netbox.ipam.prefixes.create(**data)
+        console.print(f"Successfully provisioned new /31 subnet: [bold magenta]{subnet}[/bold magenta] "
+                      f"with description: [bold green]{description}[/bold green]", style="bold green")
+    except Exception as e:
+        console.print(f"Error provisioning subnet: [bold red]{e}[/bold red]", style="bold red")
 
 # Example usage
 if __name__ == "__main__":
