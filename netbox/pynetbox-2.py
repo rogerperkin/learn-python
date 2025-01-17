@@ -93,6 +93,21 @@ def provision_new_subnet(parent_prefix, subnet, description):
     except Exception as e:
         console.print(f"Error provisioning subnet: [bold red]{e}[/bold red]", style="bold red")
 
+# Function to create and activate IP addresses in NetBox (without linking to devices)
+def create_and_activate_ip(ip):
+    # Create IP address data
+    ip_data = {
+        "address": str(ip),
+        "status": "active",  # Mark the IP as active
+    }
+
+    # Create the IP address in NetBox
+    try:
+        netbox.ipam.ip_addresses.create(**ip_data)
+        console.print(f"Successfully created and activated IP [bold green]{ip}[/bold green].", style="bold green")
+    except Exception as e:
+        console.print(f"Error creating IP address: [bold red]{e}[/bold red]", style="bold red")
+
 # Example usage
 if __name__ == "__main__":
     # Fetch and display all parent prefixes configured in NetBox
@@ -153,5 +168,9 @@ if __name__ == "__main__":
             console.print("\n[bold green]Next 2 usable IPs in the /31 range:[/bold green]")
             for ip in usable_ips:
                 console.print(f"  [bold magenta]{ip}[/bold magenta]")
+                
+                # Create and activate each IP address in NetBox
+                create_and_activate_ip(ip)
+
     else:
         console.print(f"[bold red]No available /31 subnets found within {selected_prefix}.[/bold red]")
