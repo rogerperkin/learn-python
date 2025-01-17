@@ -17,25 +17,17 @@ console = Console()
 
 # Function to get all parent prefixes from NetBox (only top-level prefixes)
 def get_all_parent_prefixes():
-    # Fetch all prefixes from NetBox
     prefixes = list(netbox.ipam.prefixes.all())  # Wrap the generator with list()
 
-    # Filter out only the top-level parent prefixes (e.g., /16, /8)
     parent_prefixes = []
     for prefix in prefixes:
-        # Convert the prefix to an ipaddress.IPv4Network object
         network = ipaddress.IPv4Network(prefix['prefix'])
-
-        # Check if the prefix is a top-level prefix by ensuring no other prefix contains it
         is_top_level = True
         for other_prefix in prefixes:
             other_network = ipaddress.IPv4Network(other_prefix['prefix'])
             if other_network != network and network.subnet_of(other_network):
-                # If the prefix is a subnet of another prefix, it is not a top-level prefix
                 is_top_level = False
                 break
-        
-        # Add to the list if it's a top-level parent prefix
         if is_top_level:
             parent_prefixes.append(prefix)
     
@@ -43,49 +35,32 @@ def get_all_parent_prefixes():
 
 # Function to find the next available /31 subnet within the parent prefix
 def get_next_available_subnet(parent_prefix):
-    # Convert the parent prefix to an ipaddress.IPv4Network object
     parent_network = ipaddress.IPv4Network(parent_prefix)
-
-    # Iterate through possible /31 subnets within the parent prefix
     for subnet in parent_network.subnets(new_prefix=31):
-        # Check if this subnet is already used in NetBox
         if not is_prefix_in_netbox(str(subnet)):
             return subnet
-
     return None
 
 # Function to check if a subnet is already used in NetBox
 def is_prefix_in_netbox(subnet):
-    # Query NetBox for existing prefixes
     prefixes = netbox.ipam.prefixes.filter(prefix=subnet)
-
-    # If the prefix is found in NetBox, it's already in use
     return any(p['prefix'] == subnet for p in prefixes)
 
 # Function to get the next 2 usable IPs from a /31 subnet
 def get_usable_ips_from_subnet(subnet):
-    # Convert subnet to an ipaddress.IPv4Network object
     network = ipaddress.IPv4Network(subnet)
-
-    # Ensure it's a /31 subnet
     if network.prefixlen != 31:
         console.print(f"The subnet [bold red]{subnet}[/bold red] is not a /31 subnet.", style="bold red")
         return []
-
-    # Get the 2 usable IPs from the /31 subnet (both are usable)
-    usable_ips = list(network.hosts())  # All hosts in the /31 subnet are usable
-    return usable_ips
+    return list(network.hosts())  # Get the 2 usable IPs from the /31 subnet
 
 # Function to provision a new /31 subnet into NetBox with clarification
 def provision_new_subnet(parent_prefix, subnet, description):
-    # Create a new prefix (subnet) in NetBox using the network address of the /31
     data = {
         "prefix": str(subnet),
         "tenant": None,  # Adjust if you need to assign it to a tenant
         "description": description,  # Use the provided description
     }
-
-    # Make the API request to create the new prefix
     try:
         netbox.ipam.prefixes.create(**data)
         console.print(f"Successfully provisioned new /31 subnet: [bold magenta]{subnet}[/bold magenta] "
@@ -93,24 +68,20 @@ def provision_new_subnet(parent_prefix, subnet, description):
     except Exception as e:
         console.print(f"Error provisioning subnet: [bold red]{e}[/bold red]", style="bold red")
 
-# Function to create and activate IP addresses in NetBox (without linking to devices)
+# Function to create and activate IP addresses in NetBox
 def create_and_activate_ip(ip):
-    # Create IP address data
     ip_data = {
         "address": str(ip),
         "status": "active",  # Mark the IP as active
     }
-
-    # Create the IP address in NetBox
     try:
         netbox.ipam.ip_addresses.create(**ip_data)
-        console.print(f"Successfully created and activated IP [bold green]{ip}[/bold green].", style="bold green")
+        return f"Successfully created and activated IP [bold green]{ip}[/bold green]."
     except Exception as e:
-        console.print(f"Error creating IP address: [bold red]{e}[/bold red]", style="bold red")
+        return f"Error creating IP address [bold red]{ip}[/bold red]: {e}"
 
 # Example usage
 if __name__ == "__main__":
-    # Fetch and display all parent prefixes configured in NetBox
     console.print("[bold blue]Fetching all top-level parent prefixes from NetBox...[/bold blue]\n")
     parent_prefixes = get_all_parent_prefixes()
 
@@ -167,10 +138,18 @@ if __name__ == "__main__":
         if usable_ips:
             console.print("\n[bold green]Next 2 usable IPs in the /31 range:[/bold green]")
             for ip in usable_ips:
-                console.print(f"  [bold magenta]{ip}[/bold magenta]")
+                console.print(f"  [bold magenta]{ip}[/bold magenta]")  # Display the IPs
+
+            # Collect results for the created and activated IPs
+            results = []
+            for ip in usable_ips:
+                result = create_and_activate_ip(ip)
+                results.append(result)
                 
-                # Create and activate each IP address in NetBox
-                create_and_activate_ip(ip)
+            # Display the results together in the output
+            console.print("\n[bold blue]Activation Results:[/bold blue]")
+            for result in results:
+                console.print(result)
 
     else:
         console.print(f"[bold red]No available /31 subnets found within {selected_prefix}.[/bold red]")
