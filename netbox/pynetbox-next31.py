@@ -6,8 +6,8 @@ from rich.table import Table
 from rich.prompt import Prompt
 
 # NetBox API URL and Token
-NETBOX_API_URL = "http://localhost:8000"  # Replace with your NetBox instance URL
-API_TOKEN = "3f8908181dcc5ede256e8610b8b374adcb43b457"  # Replace with your actual NetBox API token
+NETBOX_API_URL = "http://192.168.1.182:8050"  # Replace with your NetBox instance URL
+API_TOKEN = "447a200bfa1b4174533f59417854e9dafb3add08"  # Replace with your actual NetBox API token
 
 # Initialize pynetbox connection
 netbox = pynetbox.api(NETBOX_API_URL, token=API_TOKEN)
@@ -17,7 +17,7 @@ console = Console()
 
 # Function to get all parent prefixes from NetBox (only top-level prefixes)
 def get_all_parent_prefixes():
-    prefixes = list(netbox.ipam.prefixes.all())  # Wrap the generator with list()
+    prefixes = list(netbox.ipam.prefixes.all())  # Wrap the generator with list() so it can run multiple times 
 
     parent_prefixes = []
     for prefix in prefixes:

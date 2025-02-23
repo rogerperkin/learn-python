@@ -6,6 +6,12 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "beautifulsoup4>=4.12.3",
+    "django>=5.1.6",
+    "email-validator>=2.2.0",
+    "extras>=1.0.0",
+    "pip>=24.3.1",
+    "pyats>=25.1",
+    "pydantic>=2.10.5",
     "pynetbox>=7.4.1",
     "requests>=2.32.3",
     "rich>=13.9.4",
