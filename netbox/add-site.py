@@ -47,7 +47,7 @@ def display_sites(sites):
     console.print(table)
 
 def get_or_create_site():
-    create_new = Confirm.ask("Do you want to create a new site?")
+    create_new = Confirm.ask("Do you want to create a new site for this device?")
     if create_new:
         site_name = Prompt.ask("Enter the name of the new site")
         site = create_site(site_name)
@@ -68,6 +68,7 @@ def get_device_types():
 
 def get_device_roles():
     return nb.dcim.device_roles.all()
+
 
 def display_device_types_and_roles(device_types, device_roles):
     table = Table(title="Device Types")
@@ -117,7 +118,7 @@ def display_created_device(device):
 def show_menu():
     ascii_art = Text("""
 ==================================================
-           Welcome to Roger's NetBox Configurator
+    Welcome to Roger's NetBox Configurator
 ==================================================
 """, style="bold blue")
     console.print(Panel(ascii_art, expand=False))
