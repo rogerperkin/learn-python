@@ -1,0 +1,19 @@
+---
+- name: Render configuration from template using extra_vars
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Render the configuration file from Jinja2 template
+      template:
+        src: config_template.j2
+        dest: /tmp/rendered_config.txt
+      vars:
+        hostname: "{{ hostname }}"
+        interface_name: "{{ interface_name }}"
+        ip_address: "{{ ip_address }}"
+        subnet_mask: "{{ subnet_mask }}"
+        description: "{{ description }}"
+
+    - name: Show the rendered config in stdout
+      debug:
+        msg: "{{ lookup('file', '/tmp/rendered_config.txt') }}"

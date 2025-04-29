@@ -1,0 +1,16 @@
+! Cisco Router Configuration
+
+hostname {{ hostname }}
+
+interface {{ interface_name }}
+  ip address {{ ip_address }} {{ subnet_mask }}
+  no shutdown
+  description {{ interface_description }}
+
+line vty 0 4
+  login
+  transport input ssh
+
+enable secret {{ enable_password }}
+
+!
